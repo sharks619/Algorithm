@@ -1,0 +1,220 @@
+# Main_1010_다리놓기
+package Chap4_Combinatorics;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
+
+public class Main_1010_다리놓기 {
+    
+    // N <= M 이므로, 그냥 강 동쪽의 사이트(M개) 중에 순서없이 N개를 고르는 경우의 수와 같다 -> mCn
+    // + 동쪽사이트:서쪽사이트 1:1 연결이므로 위 처럼하면 다리끼리 겹쳐지는 건 고려할 필요가 없다. 고르고 나면 겹치지 않는 경우는 한가지뿐이기 떄문
+
+    static final int MAX = 30;
+    static final int MOD = 1000000007;
+
+    static int T;
+    static int N, M;
+    // 파스칼의 삼각형 만들어두고 활용
+    static int[][] pascalsTriangle = new int[MAX+1][MAX+1];
+
+    public static void main(String[] args) throws Exception{
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st;
+
+        makePascalsTriangle();
+        printPascalsTriangle();
+        
+        T = Integer.parseInt(br.readLine());
+        for(int tc=1; tc<=T; tc++) {
+            st = new StringTokenizer(br.readLine());
+            N = Integer.parseInt(st.nextToken());
+            M = Integer.parseInt(st.nextToken());
+            
+            // mCn
+            System.out.println(pascalsTriangle[M][N]);
+        }
+        br.close();
+
+    }
+
+    static void makePascalsTriangle() {
+		pascalsTriangle[0][0] = 1;
+		for(int i=1;i<=MAX;i++) {
+			pascalsTriangle[i][0] = 1;
+			for(int j=1;j<=i;j++) {
+				// !!! 여기서 터지는 경우를 고려해서 작업해야 한다.
+				pascalsTriangle[i][j]=(pascalsTriangle[i-1][j-1] + pascalsTriangle[i-1][j]);
+				// pascalsTriangle[i][j]=(pascalsTriangle[i-1][j-1] + pascalsTriangle[i-1][j]) % MOD; // 범위를 벗어나는 값을 보정하기 위해 %MOD
+			}
+		}
+    }
+    
+    static void printPascalsTriangle() {
+		for(int i=0;i<=MAX;i++) {
+			for(int j=0;j<=MAX;j++) {
+				System.out.print(pascalsTriangle[i][j] == 0 ? " " : pascalsTriangle[i][j] + " ");
+			}
+			System.out.println();
+		}
+	}
+}
+
+# Main_1256_사전
+package Chap4_Combinatorics;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.StringTokenizer;
+
+public class Main_1256_사전 {
+    static int N, M, K;
+    static int[][] pascalsTriangle;
+    static final int MAX = 200;
+    static final int MAX_VALUE = 1000000001; // K값 제한=10억 / 10억 1
+
+    public static void main(String args[]) throws Exception {
+        makePascalsTriangle();
+        // printPascalsTriangle();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+        
+        StringTokenizer st = new StringTokenizer(br.readLine());
+
+        N = Integer.parseInt(st.nextToken()); // a
+        M = Integer.parseInt(st.nextToken()); // z
+        K = Integer.parseInt(st.nextToken()); // k번째 문자열
+
+        if(pascalsTriangle[N+M][M] < K){
+            System.out.println("-1");
+            return;
+        }
+
+        while(true){
+            if(K <= pascalsTriangle[N+M-1][M]){
+                bw.append("a");
+                N--;
+            }
+            else{
+                bw.append("z");
+                // pascalsTriangle[N+M-1][M] 에 포함되지 않으므로 K에서 그만큼 빼준다
+                K = K - pascalsTriangle[N+M-1][M];
+                M--;
+            }
+
+            // 한 알파벳 다 썼으면 다른 알파벳 붙여넣고 끝냄
+            if(M==0){
+                for(int i=0; i<N; i++){
+                    bw.append("a");
+                }
+                break;
+            }
+            if(N==0){
+                for(int i=0; i<M; i++){
+                    bw.append("z");
+                }
+                break;
+            }
+        }
+
+        bw.flush();
+        bw.close();
+        br.close();
+    }
+
+    static void makePascalsTriangle(){
+        pascalsTriangle = new int[MAX+1][MAX+1];
+        pascalsTriangle[0][0] = 1;
+
+        for(int i=1; i<=MAX; i++){
+            pascalsTriangle[i][0] = 1;
+            for(int j=1; j<=i; j++){
+                pascalsTriangle[i][j] = Math.min(pascalsTriangle[i-1][j-1] + pascalsTriangle[i-1][j], MAX_VALUE);
+            }
+        }
+    }
+
+    static void printPascalsTriangle(){
+        for(int i=0; i<=MAX; i++){
+            for(int j=0; j<=MAX; j++){
+                System.out.print(pascalsTriangle[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+}
+
+# Main_6588_골드바흐의추측
+package Chap3_Number_Theory;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.Arrays;
+
+public class Main_6588_골드바흐의추측 {
+    static final int MAX = 1000000;
+    static boolean[] isPrime = new boolean[MAX+1];
+
+    static int N;
+    static boolean isWrong;
+    
+    public static void main(String[] args) throws Exception{
+        Arrays.fill(isPrime, true);
+        getPrimeNum();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+        
+        while(true){
+            N = Integer.parseInt(br.readLine());
+
+            if(N==0){
+                break;
+            }
+
+            isWrong = true;
+
+            // b-a가 가장 큰 것을 출력한다 >> a가 작을수록 유리
+            for(int i=2; i<=N/2; i++){
+                if(isPrime[i] && isPrime[N-i]){
+                    bw.write(N + " = " + i + " + " + (N-i));
+                    bw.newLine();
+
+                    isWrong = false;
+                    break;
+                }
+            }
+
+            if(isWrong){
+                bw.write("Goldbach's conjecture is wrong.");
+                bw.newLine();
+            }
+        } // end of while
+
+        br.close();
+        bw.flush();
+        bw.close();
+
+    }
+
+    static void getPrimeNum() {
+		isPrime[0]=isPrime[1]=false; //1은 소수가 아니므로 제외
+		
+		// 5의 배수를 가정하면 5*5 보다 작은 5의 배수는 5*1, 5*2, 5*3, 5*4이다
+		// 5*2, 5*4의 경우에는 i=2일때 이미 체크가 되었을 것이다.
+		// 또 5*3은 i=3일때 체크가 되었을 것이다.
+		for(int i=2;i*i<=MAX;i++){ //100의 제곱근인 10 까지, MAX=a*b -> a<sqrt(MAX)<b -> b로 체크하기 전에 a의 배수에서 체크된다.
+			if(isPrime[i]){//소수이면
+				//for loop : 소수i의 배수들을 모두 제외
+				for(int j=i*i;j<=MAX;j+=i) { // i*i 보다 작은 값들은 이미 이전 i의 배수를 체크할 때 다 체크했음
+					isPrime[j] = false;//소수의 배수는 모두 소수가 아니다.
+				}
+			}
+		}
+	}
+}
