@@ -1,0 +1,278 @@
+# Main_1806_부분합
+package Chap1_Algorithm_Basics;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
+
+public class Main_1806_부분합 {
+
+    static int N;
+    static int S;
+    static int[] arr;
+    static int ANSWER = Integer.MAX_VALUE;
+
+    public static void main(String[] args) throws Exception{
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(st.nextToken());
+        S = Integer.parseInt(st.nextToken());
+        arr = new int[N];
+
+        st = new StringTokenizer(br.readLine());
+        for(int i=0; i<N; i++){
+            arr[i] = Integer.parseInt(st.nextToken());
+        }
+
+        br.close();
+
+        twoPointers();
+
+        System.out.println(ANSWER == Integer.MAX_VALUE ? 0 : ANSWER);
+    }
+
+    static void twoPointers(){
+        // ANSWER : 부분합이 S이상인 수열 중 가장 짧은것의 길이
+
+        int subtotal = 0, left = 0, right = 0;
+        while(true){
+            // 부분합이 S보다 작으면 right 포인터 ++
+            if(subtotal < S){
+                // right pointer가 마지막 칸에 갔는데 subtotal이 목표치보다 작으면 끝
+                if(right == arr.length){
+                    break;
+                }
+                subtotal += arr[right];
+                right++;
+            }
+            // 부분합이 S보다 크거나 같으면 left 포인터 ++
+            else{
+                subtotal -= arr[left];
+                left++;
+                ANSWER = Math.min(ANSWER, (right - left + 1));
+            }
+
+        }
+    }
+    
+}
+
+# Main_2748_피보나치수2
+package Chap1_Algorithm_Basics;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+
+public class Main_2748_피보나치수2 {
+
+    static final int MAX = 91;
+    static long[] arr = new long[MAX];
+    static final long[] example = new long[]{0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597};
+
+    static int N;
+
+    public static void main(String args[]) throws Exception{
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        
+        N = Integer.parseInt(br.readLine());
+
+        Arrays.fill(arr, -1L);
+        System.arraycopy(example, 0, arr, 0, example.length);
+
+        System.out.println(fibonacci(N));
+    }
+
+    static long fibonacci(int N){
+        if(arr[N] == -1){
+            arr[N] = fibonacci(N-1) + fibonacci(N-2);
+        }
+        return arr[N];
+    }
+
+}
+    
+# Main_3055_탈출
+package Chap1_Algorithm_Basics;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.StringTokenizer;
+
+public class Main_3055_탈출 {
+    static int R, C;
+    static char[][] map;
+    
+    // 이동가능한 곳(상하좌우) (0,1), (-1,0), (1,0), (0,-1)
+    static int[] dx = {0, -1, 1, 0};
+    static int[] dy = {1, 0, 0, -1};
+
+    static class Point{
+        int x, y;
+        public Point(int x, int y){
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    static Queue<Point> waterQueue;
+    static Queue<Point> sQueue;
+    static int answer = 0;
+
+    public static void main(String args[]) throws Exception{
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        R =Integer.parseInt(st.nextToken());
+        C =Integer.parseInt(st.nextToken());
+        map = new char[R][C];
+
+        waterQueue = new ArrayDeque<>();
+        sQueue = new ArrayDeque<>();
+
+        for(int i=0; i<R; i++){
+            String input = br.readLine();
+            for(int j=0; j<C; j++){
+                map[i][j] = input.charAt(j);
+
+                if(map[i][j] == '*'){
+                    waterQueue.add(new Point(i, j));
+                }else if(map[i][j] == 'S'){
+                    sQueue.add(new Point(i, j));
+                }
+            }
+        }
+
+        bfs();
+        System.out.println(answer == Integer.MAX_VALUE ? "KAKTUS" : answer);
+        br.close();
+
+    }
+
+    static void bfs(){
+        // 1분 지남
+        while(true){
+            answer++;
+
+            // 1분마다 queue에 있는 레코드 만큼만 poll 하도록 한다.
+            int wSize = waterQueue.size();
+            int sSize = sQueue.size();
+            if(sSize == 0){
+                // 움직일 수 있는 곳이 없으면 끝내기
+                answer = Integer.MAX_VALUE;
+                break;
+            }
+
+            // 물이 늘어난다 -> 물 bfs
+            // 다음 타이밍에 물이 차오르는 곳으로 고슴도치는 갈 수 없다 -> 물 bfs 먼저해서 물 위치 마킹 update
+            while(wSize > 0){
+                wSize--;
+                Point current = waterQueue.poll();
+    
+                for(int i=0; i<4; i++){
+                    int nextX = current.x + dx[i];
+                    int nextY = current.y + dy[i];
+    
+                    if(nextX>=0 && nextX<R && nextY>=0 && nextY<C
+                        && map[nextX][nextY] == '.'
+                    ) {
+                        // 물 추가
+                        map[nextX][nextY] = '*';
+                        waterQueue.add(new Point(nextX, nextY));
+                    }
+                }
+            } // end of water
+    
+            // 고슴도치(S) -> 비버(D) 길찾기 bfs
+            // .으로만 한칸 이동하고 도달하면 브레이크
+            while(sSize > 0){
+                sSize--;
+                Point current = sQueue.poll();
+    
+                for(int i=0; i<4; i++){
+                    int nextX = current.x + dx[i];
+                    int nextY = current.y + dy[i];
+    
+                    if(nextX>=0 && nextX<R && nextY>=0 && nextY<C) {
+                        if(map[nextX][nextY] == '.'){
+                            // 고슴도치 이동
+                            map[nextX][nextY] = 'S';
+                            sQueue.add(new Point(nextX, nextY));
+                        }else if(map[nextX][nextY] == 'D'){
+                            // 고슴도치가 비버에 도착(끝)
+                            return;
+                        }
+                    }
+                }
+            } // end of 고슴도치
+            
+        }
+    } // end of bfs
+
+}
+
+# Main_9663_Nqueen
+package Chap1_Algorithm_Basics;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+
+public class Main_9663_Nqueen{
+    // Queen은 각 row에 한 column에만 존재할 수 있으므로, 1차원 array에 위치를 저장할 수 있다.
+    // ex) N=4 일때, arr[0]=2 => 위에서 첫번째 row의 세번째 column에 queen이 위치함
+    static int[] arr;
+    static int N;
+    static int count = 0;
+    public static void main(String args[]) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        N = Integer.parseInt(br.readLine());
+        arr = new int[N];
+
+        dfs(0);
+        bw.write(""+count);
+        bw.flush();
+        bw.close();
+        br.close();
+    }
+    
+    static void dfs(int depth){
+        // Termination Condition
+        // 마지막 줄 까지 recursion의 depth가 내려오면 퀸 배치할 수 있는 가짓수++, return
+        if(depth == N){
+            count++;
+            return;
+        }
+
+        // recursion
+        for(int i=0; i<N; i++){
+            // depth row의 i번째 칸(col)마다 queen을 놓아보자
+            arr[depth] = i;
+            // 윗 줄 코드의 queen의 위치가 가능하니? 가능하면 다음 row로 한 depth더 이동
+            if(isGood(depth)){
+                dfs(depth+1);
+            }
+        }
+    }
+
+    static boolean isGood(int row){
+        for(int i=0; i<row; i++){
+            // 0~row 번째 행 중에 같은 칸(col)에 queen이 위치한 행이 있는가?
+            if(arr[i] == arr[row]){
+                return false;
+            }
+            // (row, arr[row]) <-> (i, arr[i]) 좌표의 dx, dy
+            // 좌표 차이의 절대값이 같으면 같은 대각선상에 존재하는 것으로 판단
+            else if(Math.abs(row-i) == Math.abs(arr[row]-arr[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+
+}
